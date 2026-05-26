@@ -4,164 +4,1047 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>学習管理アプリ</title>
+
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .btn { display: block; width: 100%; padding: 15px; margin-bottom: 10px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        .btn-gray { background-color: #6c757d; }
-        .btn-del { background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        .item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        dialog { border: none; border-radius: 10px; padding: 20px; width: 80%; max-width: 400px; }
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .checkbox-container input {
+            width: auto;
+            margin: 0 10px 0 0;
+        }
+
+        .item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .item input {
+            width: auto;
+            margin-right: 15px;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .item label {
+            display: block;
+            padding: 0;
+            font-size: 15px;
+        }
+
+        .book-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    gap: 10px;
+
+    flex-wrap: nowrap;
+}
+
+        .book-item button {
+            margin-left: 5px;
+        }
+
+        #date-section {
+            display: none;
+            margin-top: 10px;
+        }
+
+        #undo-btn {
+            background-color: #f7b6c2;
+            color: #333;
+            display: none;
+        }
+
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .user-menu-btn {
+            width: auto;
+            margin: 0;
+            padding: 10px 16px;
+            background-color: #6f42c1;
+        }
+
+        .user-popup {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: min(320px, calc(100vw - 40px));
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 20px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .popup-close {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+
+        .popup-close button {
+            border: none;
+            background: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .switch-user-btn {
+            width: auto;
+            padding: 8px 12px;
+            margin: 5px 0;
+            font-size: 14px;
+        }
     </style>
 </head>
+
 <body>
 
-    <div id="group-selector">
-        <h1>学習グループ選択</h1>
-        <div style="margin-bottom: 20px; cursor:pointer;" onclick="document.getElementById('help-dialog').showModal()">
-            <span>ℹ️ 使い方</span>
+    <div id="main-menu">
+
+        <div class="card">
+
+            <div class="user-bar">
+
+                <div class="user-name">
+                    👤 <span id="current-user-name"></span>
+                </div>
+
+                <button class="btn user-menu-btn"
+                        onclick="toggleUserPopup()">
+                    ユーザー切替
+                </button>
+
+            </div>
+
         </div>
-        <div id="group-list-main"></div>
-        <button class="btn btn-gray" onclick="showGroupSettings()">学習グループを管理する</button>
+
+        <h1>学習管理アプリ</h1>
+
+        <button class="btn"
+                onclick="showInputForm()">
+            学習を記録する
+        </button>
+
+        <button class="btn"
+                onclick="showReviewList()">
+            今日の復習リスト
+        </button>
+
+        <button class="btn"
+                style="background-color:#28a745;"
+                onclick="showSettings()">
+            設定（参考書管理）
+        </button>
+
     </div>
 
-    <dialog id="help-dialog">
-        <h2>使い方</h2>
-        <p>1. まず「学習グループを管理する」から、○○試験や○○学習、○○暗記などのグループを作成してください。<br><br>
-        2. グループを選択すると、そのグループ専用の学習記録画面になります。<br><br>
-        3. 復習リストは自動で計算され、適切なタイミングで表示されます。</p>
-        <button class="btn" onclick="document.getElementById('help-dialog').close()">閉じる</button>
-    </dialog>
+    <div id="input-form" style="display:none;">
+        <div class="card">
 
-    <div id="group-settings" style="display: none;">
-        <h1>グループ管理</h1>
-        <input type="text" id="new-group-name" placeholder="新しいグループ名">
-        <button class="btn" style="background-color: #28a745;" onclick="addGroup()">追加</button>
-        <div id="group-list-edit"></div>
-        <button class="btn btn-gray" onclick="location.reload()">戻る</button>
+            <h2>学習記録</h2>
+
+            <div class="checkbox-container">
+                <input type="checkbox"
+                       id="toggle-date"
+                       onchange="toggleDateSection()">
+
+                <label for="toggle-date" style="padding:0">
+                    過去の日付で記録する
+                </label>
+            </div>
+
+            <div id="date-section">
+                <input type="date" id="study-date">
+            </div>
+
+            <label>参考書:</label>
+
+            <select id="book-select"
+                    onchange="autoFillPage()"></select>
+
+            <input type="number"
+                   id="start-page"
+                   placeholder="開始ページ">
+
+            <input type="number"
+                   id="end-page"
+                   placeholder="終了ページ">
+
+            <textarea id="memo"
+                      placeholder="備考（任意）"></textarea>
+
+            <button class="btn"
+                    onclick="saveRecord()">
+                保存する
+            </button>
+
+            <button class="btn"
+                    style="background-color:#6c757d;"
+                    onclick="hideAll()">
+                戻る
+            </button>
+
+        </div>
     </div>
 
-    <div id="main-menu" style="display: none;">
-        <h1><span id="current-group-name"></span></h1>
-        <button class="btn" onclick="showInputForm()">学習を記録する</button>
-        <button class="btn" onclick="showReviewList()">今日の復習リスト</button>
-        <button class="btn btn-gray" onclick="showSettings()">学習テキスト管理</button>
-        <button class="btn btn-gray" onclick="location.reload()">グループ選択へ戻る</button>
+    <div id="settings-form" style="display:none;">
+        <div class="card">
+
+            <h2>参考書管理</h2>
+
+            <input type="text"
+                   id="new-book-name"
+                   placeholder="参考書名を入力">
+
+            <button class="btn"
+                    style="background-color:#28a745;"
+                    onclick="addBook()">
+                追加
+            </button>
+
+            <div id="book-list"></div>
+
+            <button class="btn"
+                    style="background-color:#6c757d;"
+                    onclick="hideAll()">
+                戻る
+            </button>
+
+        </div>
     </div>
 
-    <div id="input-form" style="display: none;" class="card">
-        <h2>学習記録</h2>
-        <select id="book-select"></select>
-        <input type="number" id="start-page" placeholder="開始ページ">
-        <input type="number" id="end-page" placeholder="終了ページ">
-        <button class="btn" onclick="saveRecord()">保存</button>
-        <button class="btn btn-gray" onclick="hideAll()">戻る</button>
+    <div id="review-list" style="display:none;">
+        <div class="card">
+
+            <h2>復習リスト</h2>
+
+            <div id="review-content"></div>
+
+            <button id="undo-btn"
+                    class="btn"
+                    onclick="undoCheck()">
+                直前の操作を取り消す
+            </button>           
+
+            <button class="btn"
+                    style="background-color:#6c757d;"
+                    onclick="hideAll()">
+                戻る
+            </button>
+
+        </div>
     </div>
 
-    <div id="settings-form" style="display: none;" class="card">
-        <h2>学習テキスト管理</h2>
-        <input type="text" id="new-book-name" placeholder="テキスト名">
-        <button class="btn" style="background-color: #28a745;" onclick="addBook()">追加</button>
-        <div id="book-list"></div>
-        <button class="btn btn-gray" onclick="hideAll()">戻る</button>
+    <div id="user-popup" class="user-popup">
+
+        <div class="popup-close">
+            <button onclick="toggleUserPopup()">✕</button>
+        </div>
+
+        <h3>ユーザー切替</h3>
+
+        <div id="user-list"></div>
+
+        <hr>
+
+        <input type="text"
+               id="new-user-name"
+               placeholder="新規ユーザー名">
+
+        <button class="btn"
+                style="background-color:#28a745;"
+                onclick="addUser()">
+            ユーザー追加
+        </button>
+
     </div>
 
-    <div id="review-list" style="display: none;" class="card">
-        <h2>復習リスト</h2>
-        <div id="review-content"></div>
-        <button class="btn btn-gray" onclick="hideAll()">戻る</button>
-    </div>
+<script>
 
-    <script>
-        let currentGroup = '';
-        if (!localStorage.getItem('groups')) localStorage.setItem('groups', JSON.stringify(['○○学習グループ']));
-        renderGroups();
+    // =========================
+    // 初期化
+    // =========================
 
-        // --- グループ管理系 ---
-        function renderGroups() {
-            const groups = JSON.parse(localStorage.getItem('groups'));
-            document.getElementById('group-list-main').innerHTML = groups.map(g => `<button class="btn" onclick="selectGroup('${g}')">${g}</button>`).join('');
-            document.getElementById('group-list-edit').innerHTML = groups.map((g, i) => `
-                <div class="item"><span>${g}</span>
-                    <div>
-                        <button onclick="moveGroup(${i}, -1)">↑</button>
-                        <button onclick="moveGroup(${i}, 1)">↓</button>
-                        <button onclick="renameGroup(${i})">変更</button>
-                        <button class="btn-del" onclick="deleteGroup(${i})">削除</button>
-                    </div>
-                </div>`).join('');
+    if (!localStorage.getItem('users')) {
+
+        const defaultUsers = [
+            {
+                id: 1,
+                name: 'ユーザー1'
+            }
+        ];
+
+        const defaultStudyData = {
+            "1": {
+                books: ['テキストA', 'テキストB'],
+                records: []
+            }
+        };
+
+        localStorage.setItem(
+            'users',
+            JSON.stringify(defaultUsers)
+        );
+
+        localStorage.setItem(
+            'currentUserId',
+            '1'
+        );
+
+        localStorage.setItem(
+            'studyData',
+            JSON.stringify(defaultStudyData)
+        );
+    }
+
+    let lastAction = null;
+
+    // =========================
+    // 共通関数
+    // =========================
+
+    function getCurrentUserId() {
+        return localStorage.getItem('currentUserId');
+    }
+
+    function getStudyData() {
+        return JSON.parse(
+            localStorage.getItem('studyData')
+        );
+    }
+
+    function saveStudyData(data) {
+        localStorage.setItem(
+            'studyData',
+            JSON.stringify(data)
+        );
+    }
+
+    function getCurrentUserData() {
+
+        const userId = getCurrentUserId();
+
+        const data = getStudyData();
+
+        if (!data[userId]) {
+
+            data[userId] = {
+                books: [],
+                records: []
+            };
+
+            saveStudyData(data);
         }
 
-        function renameGroup(i) {
-            let groups = JSON.parse(localStorage.getItem('groups'));
-            const newName = prompt("新しいグループ名:", groups[i]);
-            if (newName) {
-                // データキーも移動する必要があるため、少し複雑ですがここでは名前変更のみ実装
-                groups[i] = newName;
-                localStorage.setItem('groups', JSON.stringify(groups));
-                renderGroups();
+        return data[userId];
+    }
+
+    // =========================
+    // 画面制御
+    // =========================
+
+    function hideAll() {
+
+        document.getElementById('main-menu').style.display = 'block';
+
+        document.getElementById('input-form').style.display = 'none';
+
+        document.getElementById('settings-form').style.display = 'none';
+
+        document.getElementById('review-list').style.display = 'none';
+
+        document.getElementById('undo-btn').style.display = 'none';
+    }
+
+    // =========================
+    // ユーザーUI
+    // =========================
+
+    function updateCurrentUserDisplay() {
+
+        const users =
+            JSON.parse(localStorage.getItem('users'));
+
+        const currentUserId =
+            getCurrentUserId();
+
+        const currentUser =
+            users.find(u =>
+                String(u.id) === String(currentUserId)
+            );
+
+        document.getElementById('current-user-name').textContent =
+            currentUser ? currentUser.name : '';
+    }
+
+    function toggleUserPopup() {
+
+        const popup =
+            document.getElementById('user-popup');
+
+        popup.style.display =
+            popup.style.display === 'block'
+                ? 'none'
+                : 'block';
+
+        renderUserList();
+    }
+
+    // =========================
+    // ユーザー管理
+    // =========================
+
+    function renderUserList() {
+
+        const users =
+            JSON.parse(localStorage.getItem('users'));
+
+        const currentUserId =
+            getCurrentUserId();
+
+        document.getElementById('user-list').innerHTML =
+            users.map(user => `
+
+                <div class="book-item">
+
+                    <div>
+                        ${String(user.id) === String(currentUserId)
+                            ? '✅ '
+                            : ''}
+                        ${user.name}
+                    </div>
+
+                    <div>
+
+                        <button class="switch-user-btn"
+                                onclick="switchUser(${user.id})">
+                            切替
+                        </button>
+
+                        <button class="switch-user-btn"
+                                onclick="renameUser(${user.id})">
+                            変更
+                        </button>
+
+                        <button class="switch-user-btn"
+                                onclick="deleteUser(${user.id})">
+                            削除
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `).join('');
+    }
+
+    function switchUser(userId) {
+
+        localStorage.setItem(
+            'currentUserId',
+            userId
+        );
+
+        updateCurrentUserDisplay();
+
+        renderUserList();
+    }
+
+    function addUser() {
+
+        const input =
+            document.getElementById('new-user-name');
+
+        const name =
+            input.value.trim();
+
+        if (!name) return;
+
+        let users =
+            JSON.parse(localStorage.getItem('users'));
+
+        const newId = Date.now();
+
+        users.push({
+            id: newId,
+            name: name
+        });
+
+        localStorage.setItem(
+            'users',
+            JSON.stringify(users)
+        );
+
+        let data = getStudyData();
+
+        data[newId] = {
+            books: [],
+            records: []
+        };
+
+        saveStudyData(data);
+
+        input.value = '';
+
+        renderUserList();
+    }
+
+    function renameUser(id) {
+
+        const users =
+            JSON.parse(localStorage.getItem('users'));
+
+        const user =
+            users.find(u => u.id === id);
+
+        const newName =
+            prompt(
+                '新しい名前',
+                user.name
+            );
+
+        if (!newName) return;
+
+        user.name = newName;
+
+        localStorage.setItem(
+            'users',
+            JSON.stringify(users)
+        );
+
+        updateCurrentUserDisplay();
+
+        renderUserList();
+    }
+
+    function deleteUser(id) {
+
+        const users =
+            JSON.parse(localStorage.getItem('users'));
+
+        if (users.length <= 1) {
+            alert('最後のユーザーは削除できません');
+            return;
+        }
+
+        if (!confirm('削除しますか？')) return;
+
+        let newUsers =
+            users.filter(u => u.id !== id);
+
+        localStorage.setItem(
+            'users',
+            JSON.stringify(newUsers)
+        );
+
+        let data = getStudyData();
+
+        delete data[id];
+
+        saveStudyData(data);
+
+        const currentUserId =
+            getCurrentUserId();
+
+        if (String(currentUserId) === String(id)) {
+
+            localStorage.setItem(
+                'currentUserId',
+                newUsers[0].id
+            );
+        }
+
+        updateCurrentUserDisplay();
+
+        renderUserList();
+    }
+
+    // =========================
+    // 学習記録
+    // =========================
+
+    function showInputForm() {
+
+        const books =
+            getCurrentUserData().books;
+
+        const select =
+            document.getElementById('book-select');
+
+        select.innerHTML =
+            books.map(b => `
+                <option value="${b}">
+                    ${b}
+                </option>
+            `).join('');
+
+        document.getElementById('main-menu').style.display = 'none';
+
+        document.getElementById('input-form').style.display = 'block';
+
+        document.getElementById('study-date').valueAsDate = new Date();
+
+        autoFillPage();
+    }
+
+    function autoFillPage() {
+
+        const book =
+            document.getElementById('book-select').value;
+
+        const records =
+            getCurrentUserData().records;
+
+        const history =
+            records.filter(r => r.book === book);
+
+        if (history.length > 0) {
+
+            const lastRecord =
+                history[history.length - 1];
+
+            document.getElementById('start-page').value =
+                parseInt(lastRecord.end) + 1;
+
+        } else {
+
+            document.getElementById('start-page').value = '';
+        }
+
+        document.getElementById('end-page').value = '';
+
+        document.getElementById('memo').value = '';
+    }
+
+    function toggleDateSection() {
+
+        document.getElementById('date-section').style.display =
+            document.getElementById('toggle-date').checked
+                ? 'block'
+                : 'none';
+    }
+
+    function saveRecord() {
+
+        const book =
+            document.getElementById('book-select').value;
+
+        if (!book) {
+            alert('参考書を選択してください');
+            return;
+        }
+
+        const start =
+            parseInt(
+                document.getElementById('start-page').value
+            );
+
+        const end =
+            parseInt(
+                document.getElementById('end-page').value
+            );
+
+        if (isNaN(start) || isNaN(end)) {
+            alert('ページ数を入力してください');
+            return;
+        }
+
+        if (start > end) {
+            alert('開始ページが終了ページより大きいです！');
+            return;
+        }
+
+        const dateValue =
+            document.getElementById('study-date').value;
+
+        const recordDate =
+            document.getElementById('toggle-date').checked
+                ? new Date(dateValue).getTime()
+                : new Date().getTime();
+
+        const record = {
+
+            id: Date.now(),
+
+            book: book,
+
+            start: start,
+
+            end: end,
+
+            memo:
+                document.getElementById('memo').value,
+
+            date: recordDate,
+
+            checks: {
+                d1: false,
+                d7: false,
+                d30: false
+            }
+        };
+
+        const userId =
+            getCurrentUserId();
+
+        let allData =
+            getStudyData();
+
+        allData[userId].records.push(record);
+
+        saveStudyData(allData);
+
+        alert('記録しました！');
+
+        hideAll();
+    }
+
+    // =========================
+    // 参考書管理
+    // =========================
+
+    function showSettings() {
+
+        document.getElementById('main-menu').style.display = 'none';
+
+        document.getElementById('settings-form').style.display = 'block';
+
+        renderBookList();
+    }
+
+    function renderBookList() {
+
+        const books =
+            getCurrentUserData().books;
+
+        document.getElementById('book-list').innerHTML =
+            books.map((b, index) => `
+                <div class="book-item">
+
+                    <div>${b}</div>
+
+                    <div>
+
+                        <button onclick="moveBook(${index}, -1)">
+                            ↑
+                        </button>
+
+                        <button onclick="moveBook(${index}, 1)">
+                            ↓
+                        </button>
+
+                        <button onclick="deleteBook(${index})">
+                            削除
+                        </button>
+
+                    </div>
+
+                </div>
+            `).join('');
+    }
+
+    function addBook() {
+
+        const name =
+            document.getElementById('new-book-name').value.trim();
+
+        if (!name) return;
+
+        let data =
+            getStudyData();
+
+        const userId =
+            getCurrentUserId();
+
+        data[userId].books.push(name);
+
+        saveStudyData(data);
+
+        document.getElementById('new-book-name').value = '';
+
+        renderBookList();
+    }
+
+    function deleteBook(index) {
+
+        let data =
+            getStudyData();
+
+        const userId =
+            getCurrentUserId();
+
+        data[userId].books.splice(index, 1);
+
+        saveStudyData(data);
+
+        renderBookList();
+    }
+
+    function moveBook(index, dir) {
+
+        let data =
+            getStudyData();
+
+        const userId =
+            getCurrentUserId();
+
+        let books =
+            data[userId].books;
+
+        if (index + dir < 0 ||
+            index + dir >= books.length) return;
+
+        [books[index], books[index + dir]] =
+        [books[index + dir], books[index]];
+
+        saveStudyData(data);
+
+        renderBookList();
+    }
+
+    // =========================
+    // 復習リスト
+    // =========================
+
+    function showReviewList() {
+
+        document.getElementById('main-menu').style.display = 'none';
+
+        document.getElementById('review-list').style.display = 'block';
+
+        let records =
+            getCurrentUserData().records;
+
+        const now =
+            new Date().getTime();
+
+        const day =
+            24 * 60 * 60 * 1000;
+
+        let html = records.map(r => {
+
+            let diffDays =
+                (now - r.date) / day;
+
+            let tasks = [];
+
+            const memoText =
+                r.memo
+                    ? ` (${r.memo})`
+                    : '';
+
+            if (diffDays >= 30 &&
+                !r.checks.d30) {
+
+                tasks.push(`
+                    <div class="item">
+
+                        <input type="checkbox"
+                               onchange="toggleCheck(${r.id}, 'd30', true)">
+
+                        <label>
+                            復習3:
+                            ${r.book}
+                            ${r.start}-${r.end}p
+                            ${memoText}
+                        </label>
+
+                    </div>
+                `);
+
+            } else if (diffDays >= 7 &&
+                       !r.checks.d7) {
+
+                tasks.push(`
+                    <div class="item">
+
+                        <input type="checkbox"
+                               onchange="toggleCheck(${r.id}, 'd7', true)">
+
+                        <label>
+                            復習2:
+                            ${r.book}
+                            ${r.start}-${r.end}p
+                            ${memoText}
+                        </label>
+
+                    </div>
+                `);
+
+            } else if (diffDays >= 1 &&
+                       !r.checks.d1) {
+
+                tasks.push(`
+                    <div class="item">
+
+                        <input type="checkbox"
+                               onchange="toggleCheck(${r.id}, 'd1', false)">
+
+                        <label>
+                            復習1:
+                            ${r.book}
+                            ${r.start}-${r.end}p
+                            ${memoText}
+                        </label>
+
+                    </div>
+                `);
+            }
+
+            return tasks.join('');
+
+        }).join('');
+
+        document.getElementById('review-content').innerHTML =
+            html || 'やるべき復習はありません。';
+    }
+
+    function toggleCheck(id, key, autoClearBelow) {
+
+        let data =
+            getStudyData();
+
+        const userId =
+            getCurrentUserId();
+
+        let records =
+            data[userId].records;
+
+        let r =
+            records.find(item => item.id === id);
+
+        lastAction = {
+            id,
+            key,
+            autoClearBelow,
+            prevChecks:
+                JSON.parse(
+                    JSON.stringify(r.checks)
+                )
+        };
+
+        const undoBtn =
+            document.getElementById('undo-btn');
+
+        undoBtn.style.display = 'block';
+
+        setTimeout(() => {
+
+            undoBtn.style.display = 'none';
+
+        }, 3000);
+
+        r.checks[key] = true;
+
+        if (autoClearBelow) {
+
+            if (key === 'd30') {
+                r.checks.d7 = true;
+                r.checks.d1 = true;
+            }
+
+            if (key === 'd7') {
+                r.checks.d1 = true;
             }
         }
 
-        function moveGroup(i, d) {
-            let g = JSON.parse(localStorage.getItem('groups'));
-            if (i + d < 0 || i + d >= g.length) return;
-            [g[i], g[i + d]] = [g[i + d], g[i]];
-            localStorage.setItem('groups', JSON.stringify(g));
-            renderGroups();
-        }
+        saveStudyData(data);
 
-        function deleteGroup(i) {
-            let groups = JSON.parse(localStorage.getItem('groups'));
-            groups.splice(i, 1);
-            localStorage.setItem('groups', JSON.stringify(groups));
-            renderGroups();
-        }
+        showReviewList();
+    }
 
-        // --- テキスト管理系 ---
-        function renderBookList() {
-            const books = JSON.parse(localStorage.getItem('books_' + currentGroup) || '[]');
-            document.getElementById('book-list').innerHTML = books.map((b, i) => `
-                <div class="item">${b}
-                    <div>
-                        <button onclick="moveBook(${i}, -1)">↑</button>
-                        <button onclick="moveBook(${i}, 1)">↓</button>
-                        <button onclick="renameBook(${i})">変更</button>
-                        <button class="btn-del" onclick="deleteBook(${i})">削除</button>
-                    </div>
-                </div>`).join('');
-        }
+    function undoCheck() {
 
-        function renameBook(i) {
-            let books = JSON.parse(localStorage.getItem('books_' + currentGroup));
-            const newName = prompt("新しいテキスト名:", books[i]);
-            if (newName) {
-                books[i] = newName;
-                localStorage.setItem('books_' + currentGroup, JSON.stringify(books));
-                renderBookList();
-            }
-        }
+        if (!lastAction) return;
 
-        function moveBook(i, d) {
-            let b = JSON.parse(localStorage.getItem('books_' + currentGroup));
-            if (i + d < 0 || i + d >= b.length) return;
-            [b[i], b[i + d]] = [b[i + d], b[i]];
-            localStorage.setItem('books_' + currentGroup, JSON.stringify(b));
-            renderBookList();
-        }
+        let data =
+            getStudyData();
 
-        // ...以下、既存の共通ロジック...
-        function selectGroup(name) { currentGroup = name; document.getElementById('current-group-name').innerText = name; document.getElementById('group-selector').style.display = 'none'; document.getElementById('main-menu').style.display = 'block'; }
-        function addGroup() { let groups = JSON.parse(localStorage.getItem('groups')); groups.push(document.getElementById('new-group-name').value); localStorage.setItem('groups', JSON.stringify(groups)); renderGroups(); }
-        function showGroupSettings() { document.getElementById('group-selector').style.display = 'none'; document.getElementById('group-settings').style.display = 'block'; }
-        function hideAll() { document.getElementById('main-menu').style.display = 'block'; document.getElementById('input-form').style.display = 'none'; document.getElementById('settings-form').style.display = 'none'; document.getElementById('review-list').style.display = 'none'; }
-        function showSettings() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('settings-form').style.display = 'block'; renderBookList(); }
-        function addBook() { let books = JSON.parse(localStorage.getItem('books_' + currentGroup) || '[]'); books.push(document.getElementById('new-book-name').value); localStorage.setItem('books_' + currentGroup, JSON.stringify(books)); renderBookList(); }
-        function deleteBook(i) { let books = JSON.parse(localStorage.getItem('books_' + currentGroup)); books.splice(i, 1); localStorage.setItem('books_' + currentGroup, JSON.stringify(books)); renderBookList(); }
-        function showInputForm() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('input-form').style.display = 'block'; const books = JSON.parse(localStorage.getItem('books_' + currentGroup)); document.getElementById('book-select').innerHTML = books.map(b => `<option value="${b}">${b}</option>`).join(''); }
-        function saveRecord() { let records = JSON.parse(localStorage.getItem('studyRecords_' + currentGroup) || '[]'); records.push({ book: document.getElementById('book-select').value, start: document.getElementById('start-page').value, end: document.getElementById('end-page').value, date: Date.now() }); localStorage.setItem('studyRecords_' + currentGroup, JSON.stringify(records)); hideAll(); }
-        function showReviewList() { document.getElementById('main-menu').style.display = 'none'; document.getElementById('review-list').style.display = 'block'; let records = JSON.parse(localStorage.getItem('studyRecords_' + currentGroup) || '[]'); document.getElementById('review-content').innerHTML = records.length ? records.map(r => `<div>${r.book} ${r.start}-${r.end}p</div>`).join('') : '復習なし'; }
-    </script>
+        const userId =
+            getCurrentUserId();
+
+        let records =
+            data[userId].records;
+
+        let r =
+            records.find(item =>
+                item.id === lastAction.id
+            );
+
+        r.checks = lastAction.prevChecks;
+
+        saveStudyData(data);
+
+        lastAction = null;
+
+        document.getElementById('undo-btn').style.display = 'none';
+
+        showReviewList();
+    }
+
+    // =========================
+    // 起動時
+    // =========================
+
+    updateCurrentUserDisplay();
+
+</script>
+
 </body>
 </html>
