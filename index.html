@@ -150,6 +150,30 @@
             margin: 5px 0;
             font-size: 14px;
         }
+
+        .book-select-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .book-select-row select {
+            flex: 1;
+            margin: 10px 0;
+        }
+
+        .book-add-btn {
+            width: 50px;
+            height: 42px;
+            border: none;
+            border-radius: 6px;
+            background: #28a745;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+
     </style>
 </head>
 
@@ -186,12 +210,6 @@
             今日の復習リスト
         </button>
 
-        <button class="btn"
-                style="background-color:#28a745;"
-                onclick="showSettings()">
-            設定（参考書管理）
-        </button>
-
     </div>
 
     <div id="input-form" style="display:none;">
@@ -215,8 +233,18 @@
 
             <label>参考書:</label>
 
-            <select id="book-select"
-                    onchange="autoFillPage()"></select>
+            <div class="book-select-row">
+
+                <select id="book-select"
+                        onchange="autoFillPage()"></select>
+
+                <button type="button"
+                        class="book-add-btn"
+                        onclick="toggleBookPopup()">
+                    ＋
+                </button>
+
+            </div>
 
             <input type="number"
                    id="start-page"
@@ -233,32 +261,6 @@
                     onclick="saveRecord()">
                 保存する
             </button>
-
-            <button class="btn"
-                    style="background-color:#6c757d;"
-                    onclick="hideAll()">
-                戻る
-            </button>
-
-        </div>
-    </div>
-
-    <div id="settings-form" style="display:none;">
-        <div class="card">
-
-            <h2>参考書管理</h2>
-
-            <input type="text"
-                   id="new-book-name"
-                   placeholder="参考書名を入力">
-
-            <button class="btn"
-                    style="background-color:#28a745;"
-                    onclick="addBook()">
-                追加
-            </button>
-
-            <div id="book-list"></div>
 
             <button class="btn"
                     style="background-color:#6c757d;"
@@ -405,11 +407,13 @@
 
         document.getElementById('input-form').style.display = 'none';
 
-        document.getElementById('settings-form').style.display = 'none';
-
         document.getElementById('review-list').style.display = 'none';
 
         document.getElementById('undo-btn').style.display = 'none';
+
+        document.getElementById('user-popup').style.display = 'none';
+
+        document.getElementById('book-popup').style.display = 'none';
     }
 
     // =========================
@@ -759,14 +763,14 @@
     // 参考書管理
     // =========================
 
-    function showSettings() {
-
-        document.getElementById('main-menu').style.display = 'none';
-
-        document.getElementById('settings-form').style.display = 'block';
-
-        renderBookList();
-    }
+//    function showSettings() {
+//
+//        document.getElementById('main-menu').style.display = 'none';
+//
+//        document.getElementById('settings-form').style.display = 'block';
+//
+//        renderBookList();
+//    }
 
     function renderBookList() {
 
@@ -789,6 +793,10 @@
                             ↓
                         </button>
 
+                        <button onclick="renameBook(${index})">
+                            変更
+                        </button>
+
                         <button onclick="deleteBook(${index})">
                             削除
                         </button>
@@ -802,7 +810,7 @@
     function addBook() {
 
         const name =
-            document.getElementById('new-book-name').value.trim();
+            document.getElementById('popup-new-book-name').value.trim();
 
         if (!name) return;
 
@@ -816,9 +824,14 @@
 
         saveStudyData(data);
 
-        document.getElementById('new-book-name').value = '';
+        document.getElementById('popup-new-book-name').value = '';
 
         renderBookList();
+
+        document.getElementById('book-popup').style.display = 'none';
+
+        showInputForm();
+
     }
 
     function deleteBook(index) {
@@ -1038,6 +1051,46 @@
         showReviewList();
     }
 
+    function toggleBookPopup() {
+
+        const popup =
+            document.getElementById('book-popup');
+
+        popup.style.display =
+            popup.style.display === 'block'
+                ? 'none'
+                : 'block';
+
+        renderBookList();
+    }
+
+    function renameBook(index) {
+
+        let data =
+            getStudyData();
+
+        const userId =
+            getCurrentUserId();
+
+        let books =
+            data[userId].books;
+
+        const newName =
+            prompt(
+                '参考書名',
+                books[index]
+            );
+
+        if (!newName) return;
+
+        books[index] = newName;
+
+        saveStudyData(data);
+
+        renderBookList();
+    }
+    
+
     // =========================
     // 起動時
     // =========================
@@ -1045,6 +1098,30 @@
     updateCurrentUserDisplay();
 
 </script>
+
+    <div id="book-popup" class="user-popup">
+
+        <div class="popup-close">
+            <button onclick="toggleBookPopup()">✕</button>
+        </div>
+
+        <h3>参考書管理</h3>
+
+        <div id="book-list"></div>
+
+        <hr>
+
+    <input type="text"
+        id="popup-new-book-name"
+        placeholder="参考書名">
+
+        <button class="btn"
+                style="background-color:#28a745;"
+                onclick="addBook()">
+            追加
+        </button>
+
+    </div>
 
 </body>
 </html>
