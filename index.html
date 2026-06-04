@@ -76,15 +76,25 @@
         }
 
         .book-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #eee;
-    gap: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
 
-    flex-wrap: nowrap;
-}
+        .book-item > div:first-child {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .book-item > div:last-child {
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
 
         .book-item button {
             margin-left: 5px;
@@ -105,18 +115,26 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
         }
 
         .user-name {
             font-size: 18px;
             font-weight: bold;
+
+            flex: 1;
+            min-width: 0;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-menu-btn {
             width: auto;
             margin: 0;
             padding: 10px 16px;
-            background-color: #6f42c1;
+            background-color: #28a745;
         }
 
         .user-popup {
@@ -146,9 +164,9 @@
 
         .switch-user-btn {
             width: auto;
-            padding: 8px 12px;
-            margin: 5px 0;
-            font-size: 14px;
+            padding: 6px 10px;
+            margin: 2px;
+            font-size: 13px;
         }
 
         .book-select-row {
@@ -173,6 +191,40 @@
             cursor: pointer;
         }
 
+        #user-list .book-item > div:first-child {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        #user-list .book-item > div:last-child {
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+
+        .user-item-name {
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        .user-item-buttons {
+            flex-shrink: 0;
+            display: flex;
+            gap: 4px;
+        }
+
 
     </style>
 </head>
@@ -181,6 +233,8 @@
 
     <div id="main-menu">
 
+        <h1>学習管理アプリ</h1>
+        
         <div class="card">
 
             <div class="user-bar">
@@ -191,14 +245,12 @@
 
                 <button class="btn user-menu-btn"
                         onclick="toggleUserPopup()">
-                    ユーザー切替
+                    切替
                 </button>
 
             </div>
 
         </div>
-
-        <h1>学習管理アプリ</h1>
 
         <button class="btn"
                 onclick="showInputForm()">
@@ -301,19 +353,18 @@
 
         <h3>ユーザー切替</h3>
 
+        <button id="user-edit-btn"
+                class="btn"
+                onclick="toggleUserEditMode()">
+            編集
+        </button>
+
         <div id="user-list"></div>
 
+
+        <div id="user-edit-area"></div>
+
         <hr>
-
-        <input type="text"
-               id="new-user-name"
-               placeholder="新規ユーザー名">
-
-        <button class="btn"
-                style="background-color:#28a745;"
-                onclick="addUser()">
-            ユーザー追加
-        </button>
 
     </div>
 
@@ -356,6 +407,8 @@
     }
 
     let lastAction = null;
+
+    let userEditMode = false;
 
     // =========================
     // 共通関数
@@ -439,13 +492,20 @@
 
     function toggleUserPopup() {
 
-        const popup =
-            document.getElementById('user-popup');
+            const popup =
+                document.getElementById('user-popup');
 
-        popup.style.display =
-            popup.style.display === 'block'
-                ? 'none'
-                : 'block';
+            popup.style.display =
+                popup.style.display === 'block'
+                    ? 'none'
+                    : 'block';
+
+            renderUserList();
+        }
+
+        function toggleUserEditMode() {
+
+        userEditMode = !userEditMode;
 
         renderUserList();
     }
@@ -463,39 +523,114 @@
             getCurrentUserId();
 
         document.getElementById('user-list').innerHTML =
-            users.map(user => `
+            users.map((user, index) => `
 
-                <div class="book-item">
+                <div class="user-item">
 
-                    <div>
+                    <div class="user-item-name"
+                        ${!userEditMode
+                            ? `onclick="switchUser(${user.id})"
+                            style="cursor:pointer;"`
+                            : ''
+                        }>
+
                         ${String(user.id) === String(currentUserId)
                             ? '✅ '
                             : ''}
+
                         ${user.name}
-                    </div>
-
-                    <div>
-
-                        <button class="switch-user-btn"
-                                onclick="switchUser(${user.id})">
-                            切替
-                        </button>
-
-                        <button class="switch-user-btn"
-                                onclick="renameUser(${user.id})">
-                            変更
-                        </button>
-
-                        <button class="switch-user-btn"
-                                onclick="deleteUser(${user.id})">
-                            削除
-                        </button>
 
                     </div>
+
+                    ${userEditMode ? `
+
+                        <div class="user-item-buttons">
+
+                            <button class="switch-user-btn"
+                                    onclick="moveUser(${index}, -1)">
+                                ↑
+                            </button>
+
+                            <button class="switch-user-btn"
+                                    onclick="moveUser(${index}, 1)">
+                                ↓
+                            </button>
+
+                            <button class="switch-user-btn"
+                                    onclick="renameUser(${user.id})">
+                                変更
+                            </button>
+
+                            <button class="switch-user-btn"
+                                    onclick="deleteUser(${user.id})">
+                                削除
+                            </button>
+
+                        </div>
+
+                    ` : ''}
 
                 </div>
 
             `).join('');
+
+        const editBtn =
+    document.getElementById('user-edit-btn');
+
+    editBtn.textContent =
+        userEditMode
+            ? '編集終了'
+            : '編集';
+
+    editBtn.style.backgroundColor =
+        userEditMode
+            ? '#fd7e14'
+            : '#28a745';
+
+    document.getElementById('user-edit-area').innerHTML =
+
+        userEditMode
+
+            ? `
+
+                <hr>
+
+                <input type="text"
+                    id="new-user-name"
+                    placeholder="新規ユーザー名">
+
+                <button class="btn"
+                        style="background-color:#28a745;"
+                        onclick="addUser()">
+                    ユーザー追加
+                </button>
+
+            `
+
+            : '';
+    }
+
+    function moveUser(index, dir) {
+
+        let users =
+            JSON.parse(
+                localStorage.getItem('users')
+            );
+
+        if (
+            index + dir < 0 ||
+            index + dir >= users.length
+        ) return;
+
+        [users[index], users[index + dir]] =
+        [users[index + dir], users[index]];
+
+        localStorage.setItem(
+            'users',
+            JSON.stringify(users)
+        );
+
+        renderUserList();
     }
 
     function switchUser(userId) {
