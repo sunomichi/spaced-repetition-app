@@ -216,13 +216,24 @@
         .user-item-name {
             flex: 1;
             min-width: 0;
-            word-break: break-word;
+
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-item-buttons {
             flex-shrink: 0;
             display: flex;
             gap: 4px;
+        }
+
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 999;
         }
 
 
@@ -258,6 +269,7 @@
         </button>
 
         <button class="btn"
+                id="review-btn"
                 onclick="showReviewList()">
             今日の復習リスト
         </button>
@@ -344,6 +356,8 @@
 
         </div>
     </div>
+
+    <div id="modal-overlay"></div>
 
     <div id="user-popup" class="user-popup">
 
@@ -467,6 +481,8 @@
         document.getElementById('user-popup').style.display = 'none';
 
         document.getElementById('book-popup').style.display = 'none';
+
+        document.getElementById('modal-overlay').style.display = 'none';
     }
 
     // =========================
@@ -492,20 +508,18 @@
 
     function toggleUserPopup() {
 
-            const popup =
-                document.getElementById('user-popup');
+        const popup = document.getElementById('user-popup');
+        const overlay = document.getElementById('modal-overlay');
 
-            popup.style.display =
-                popup.style.display === 'block'
-                    ? 'none'
-                    : 'block';
+        if (popup.style.display === 'block') {
 
-            renderUserList();
+            closeUserPopup();
+
+        } else {
+
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
         }
-
-        function toggleUserEditMode() {
-
-        userEditMode = !userEditMode;
 
         renderUserList();
     }
@@ -513,6 +527,11 @@
     // =========================
     // ユーザー管理
     // =========================
+
+    function toggleUserEditMode() {
+        userEditMode = !userEditMode;
+        renderUserList();
+    }
 
     function renderUserList() {
 
@@ -635,14 +654,13 @@
 
     function switchUser(userId) {
 
-        localStorage.setItem(
-            'currentUserId',
-            userId
-        );
+        localStorage.setItem('currentUserId', userId);
 
         updateCurrentUserDisplay();
-
+        updateReviewCount();
         renderUserList();
+
+        closeUserPopup();
     }
 
     function addUser() {
@@ -657,6 +675,11 @@
 
         let users =
             JSON.parse(localStorage.getItem('users'));
+
+        if (users.some(u => u.name === name)) {
+            alert('同じユーザー名が存在します');
+            return;
+        }
 
         const newId = Date.now();
 
@@ -700,6 +723,17 @@
 
         if (!newName) return;
 
+        if (
+            users.some(
+                u =>
+                    u.id !== id &&
+                    u.name === newName
+            )
+        ) {
+            alert('同じユーザー名が存在します');
+            return;
+        }
+
         user.name = newName;
 
         localStorage.setItem(
@@ -710,6 +744,10 @@
         updateCurrentUserDisplay();
 
         renderUserList();
+
+        document.getElementById(
+            'user-popup'
+        ).style.display = 'none';
     }
 
     function deleteUser(id) {
@@ -722,7 +760,9 @@
             return;
         }
 
-        if (!confirm('削除しますか？')) return;
+        if (!confirm('このユーザーの学習履歴も全て削除されます。よろしいですか？')) {
+            return;
+        }
 
         let newUsers =
             users.filter(u => u.id !== id);
@@ -752,6 +792,16 @@
         updateCurrentUserDisplay();
 
         renderUserList();
+
+        document.getElementById(
+            'user-popup'
+        ).style.display = 'none';
+    }
+
+    function closeUserPopup() {
+        document.getElementById('user-popup').style.display = 'none';
+        document.getElementById('modal-overlay').style.display = 'none';
+        userEditMode = false;
     }
 
     // =========================
@@ -889,6 +939,8 @@
 
         saveStudyData(allData);
 
+        updateReviewCount();
+
         alert('記録しました！');
 
         hideAll();
@@ -897,15 +949,6 @@
     // =========================
     // 参考書管理
     // =========================
-
-//    function showSettings() {
-//
-//        document.getElementById('main-menu').style.display = 'none';
-//
-//        document.getElementById('settings-form').style.display = 'block';
-//
-//        renderBookList();
-//    }
 
     function renderBookList() {
 
@@ -949,6 +992,14 @@
 
         if (!name) return;
 
+        const books =
+            getCurrentUserData().books;
+
+        if (books.includes(name)) {
+            alert('同じ参考書名が存在します');
+            return;
+        }
+
         let data =
             getStudyData();
 
@@ -963,6 +1014,8 @@
 
         renderBookList();
 
+        refreshBookSelect();
+
         document.getElementById('book-popup').style.display = 'none';
 
         showInputForm();
@@ -971,17 +1024,36 @@
 
     function deleteBook(index) {
 
+        if (!confirm('参考書を削除しますか？')) {
+            return;
+        }
+
         let data =
             getStudyData();
 
         const userId =
             getCurrentUserId();
 
+        const deletedBook =
+            data[userId].books[index];
+
         data[userId].books.splice(index, 1);
 
         saveStudyData(data);
 
         renderBookList();
+
+        const select =
+            document.getElementById('book-select');
+
+        if (select && select.value === deletedBook) {
+
+            refreshBookSelect('');
+
+        } else {
+
+            refreshBookSelect();
+        }
     }
 
     function moveBook(index, dir) {
@@ -1004,6 +1076,35 @@
         saveStudyData(data);
 
         renderBookList();
+
+        refreshBookSelect();
+    }
+
+    function refreshBookSelect(selectedBook = null) {
+
+        const select =
+            document.getElementById('book-select');
+
+        if (!select) return;
+
+        const currentSelection =
+            selectedBook ?? select.value;
+
+        const books =
+            getCurrentUserData().books;
+
+        select.innerHTML =
+            books.map(b => `
+                <option value="${b}">
+                    ${b}
+                </option>
+            `).join('');
+
+        if (books.includes(currentSelection)) {
+
+            select.value = currentSelection;
+
+        }
     }
 
     // =========================
@@ -1017,7 +1118,35 @@
         document.getElementById('review-list').style.display = 'block';
 
         let records =
-            getCurrentUserData().records;
+            [...getCurrentUserData().records];
+        
+        records.sort((a, b) => {
+
+            const now = Date.now();
+
+            const day =
+                24 * 60 * 60 * 1000;
+
+            const getPriority = r => {
+
+                const diff =
+                    (now - r.date) / day;
+
+                if (diff >= 30 && !r.checks.d30)
+                    return 3;
+
+                if (diff >= 7 && !r.checks.d7)
+                    return 2;
+
+                if (diff >= 1 && !r.checks.d1)
+                    return 1;
+
+                return 0;
+            };
+
+            return getPriority(b)
+                - getPriority(a);
+        });
 
         const now =
             new Date().getTime();
@@ -1154,7 +1283,10 @@
 
         saveStudyData(data);
 
+        updateReviewCount();
+
         showReviewList();
+
     }
 
     function undoCheck() {
@@ -1178,6 +1310,8 @@
         r.checks = lastAction.prevChecks;
 
         saveStudyData(data);
+
+        updateReviewCount();
 
         lastAction = null;
 
@@ -1210,6 +1344,9 @@
         let books =
             data[userId].books;
 
+        const oldName =
+            books[index];
+        
         const newName =
             prompt(
                 '参考書名',
@@ -1218,11 +1355,65 @@
 
         if (!newName) return;
 
+        if (
+            books.includes(newName) &&
+            newName !== oldName
+        ) {
+            alert('同じ参考書名が存在します');
+            return;
+        }
+
         books[index] = newName;
+
+        data[userId].records.forEach(r => {
+
+            if (r.book === oldName) {
+
+                r.book = newName;
+            }
+
+        });
 
         saveStudyData(data);
 
         renderBookList();
+
+        refreshBookSelect(newName);
+
+    }
+
+    function updateReviewCount() {
+
+        const records =
+            getCurrentUserData().records;
+
+        const now =
+            Date.now();
+
+        const day =
+            24 * 60 * 60 * 1000;
+
+        let count = 0;
+
+        records.forEach(r => {
+
+            const diff =
+                (now - r.date) / day;
+
+            if (
+                (diff >= 30 && !r.checks.d30) ||
+                (diff >= 7 && !r.checks.d7) ||
+                (diff >= 1 && !r.checks.d1)
+            ) {
+                count++;
+            }
+
+        });
+
+        document.getElementById(
+            'review-btn'
+        ).textContent =
+            `今日の復習リスト (${count}件)`;
     }
     
 
@@ -1231,6 +1422,7 @@
     // =========================
 
     updateCurrentUserDisplay();
+    updateReviewCount();
 
 </script>
 
