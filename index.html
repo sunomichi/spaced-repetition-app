@@ -367,18 +367,18 @@
 
         <h3>ユーザー切替</h3>
 
-        <button id="user-edit-btn"
-                class="btn"
-                onclick="toggleUserEditMode()">
-            編集
-        </button>
-
         <div id="user-list"></div>
 
 
         <div id="user-edit-area"></div>
 
         <hr>
+
+        <button id="user-edit-btn"
+                class="btn"
+                onclick="toggleUserEditMode()">
+            編集
+        </button>
 
     </div>
 
@@ -607,26 +607,19 @@
             : '#28a745';
 
     document.getElementById('user-edit-area').innerHTML =
+    userEditMode
+        ? `
+            <input type="text"
+                id="new-user-name"
+                placeholder="新規ユーザー名">
 
-        userEditMode
-
-            ? `
-
-                <hr>
-
-                <input type="text"
-                    id="new-user-name"
-                    placeholder="新規ユーザー名">
-
-                <button class="btn"
-                        style="background-color:#28a745;"
-                        onclick="addUser()">
-                    ユーザー追加
-                </button>
-
-            `
-
-            : '';
+            <button class="btn"
+                    style="background-color:#28a745;"
+                    onclick="addUser()">
+                ユーザー追加
+            </button>
+        `
+        : '';
     }
 
     function moveUser(index, dir) {
@@ -1378,7 +1371,7 @@
 
         renderBookList();
 
-        refreshBookSelect(newName);
+        refreshBookSelect();
 
     }
 
