@@ -1005,7 +1005,7 @@
 
         refreshBookSelect();
 
-        document.getElementById('book-popup').style.display = 'none';
+        closeBookPopup();
 
         showInputForm();
 
@@ -1314,12 +1314,25 @@
         const popup =
             document.getElementById('book-popup');
 
-        popup.style.display =
-            popup.style.display === 'block'
-                ? 'none'
-                : 'block';
+        const overlay =
+            document.getElementById('modal-overlay');
 
-        renderBookList();
+        if (popup.style.display === 'block') {
+
+            closeBookPopup();
+
+        } else {
+
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+
+            renderBookList();
+        }
+    }
+
+    function closeBookPopup() {
+        document.getElementById('book-popup').style.display = 'none';
+        document.getElementById('modal-overlay').style.display = 'none';
     }
 
     function renameBook(index) {
