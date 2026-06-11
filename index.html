@@ -33,6 +33,18 @@
             cursor: pointer;
         }
 
+        .help-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            background: white;
+            color: #666;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+        }
+
         input,
         select,
         textarea {
@@ -238,15 +250,10 @@
 
         .history-item {
             background: white;
-
             border-left: 6px solid #007bff;
-
             border-radius: 10px;
-
             padding: 12px;
-
             margin-bottom: 12px;
-
             box-shadow: 0 2px 5px rgba(0,0,0,0.08);
 
             display: flex;
@@ -257,6 +264,7 @@
 
         .history-main {
             flex: 1;
+            min-width: 0;
         }
 
         .history-book {
@@ -282,8 +290,8 @@
         .history-memo {
             padding: 6px 0;
             border-bottom: 1px solid #eee;
-            color: #666;
-            font-size: 13px;
+            color: #555;
+            font-size: 14px;
         }
 
         .delete-btn {
@@ -343,16 +351,9 @@
             <h1 style="margin:0;">学習管理アプリ</h1>
 
             <button
-                onclick="toggleHelpPopup()"
-                style="
-                    padding:8px 12px;
-                    border:none;
-                    border-radius:6px;
-                    background:#17a2b8;
-                    color:white;
-                    cursor:pointer;
-                ">
-                使い方
+                class="help-icon-btn"
+                onclick="toggleHelpPopup()">
+                ?
             </button>
         </div>
         
@@ -406,16 +407,9 @@
                 </h2>
 
                 <button
-                    onclick="toggleInputHelpPopup()"
-                    style="
-                        padding:6px 10px;
-                        border:none;
-                        border-radius:6px;
-                        background:#17a2b8;
-                        color:white;
-                        cursor:pointer;
-                    ">
-                    使い方
+                    class="help-icon-btn"
+                    onclick="toggleInputHelpPopup()">
+                    ?
                 </button>
 
             </div>
@@ -490,10 +484,9 @@
     </div>
 
     <div id="review-list"
-        style="display:none;background:#f4f4f9;padding:10px;border-radius:10px;">
+        style="display:none;">
 
-        <div class="card"
-            style="background:#f4f4f9;box-shadow:none;">
+        <div style="background:#f4f4f9;">
 
             <h2>復習リスト</h2>
 
@@ -515,10 +508,9 @@
     </div>
 
     <div id="history-list"
-        style="display:none;background:#f4f4f9;padding:10px;border-radius:10px;">
+        style="display:none;">
 
-        <div class="card"
-            style="background:#f4f4f9;box-shadow:none;">
+        <div style="background:#f4f4f9;">
 
             <h2>学習履歴</h2>
 
@@ -1394,21 +1386,21 @@
                         </div>
 
                         <div class="review-page">
-                            ページ：${r.start} ～ ${r.end}
+                            【ページ】${r.start} ～ ${r.end}
                         </div>
 
                         ${
                             r.memo && r.memo.trim()
                                 ? `
                                     <div class="history-memo">
-                                        備考欄：${r.memo}
+                                        【備考欄】${r.memo}
                                     </div>
                                 `
                                 : ''
                         }
 
                         <div class="review-date">
-                            学習日：${formatDate(r.date)}
+                            【学習日】${formatDate(r.date)}
                         </div>
                     </div>
 
@@ -1453,21 +1445,21 @@
                             </div>
 
                             <div class="history-page">
-                                ページ：${r.start} ～ ${r.end}
+                                【ページ】${r.start} ～ ${r.end}
                             </div>
 
                             ${
                                 r.memo && r.memo.trim()
                                     ? `
                                         <div class="history-memo">
-                                            備考欄：${r.memo}
+                                            【備考欄】${r.memo}
                                         </div>
                                     `
                                     : ''
                             }
 
                             <div class="history-date">
-                                学習日：${date}
+                                【学習日】${date}
                             </div>
 
                         </div>
