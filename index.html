@@ -236,6 +236,101 @@
             z-index: 999;
         }
 
+        .history-item {
+            background: white;
+
+            border-left: 6px solid #007bff;
+
+            border-radius: 10px;
+
+            padding: 12px;
+
+            margin-bottom: 12px;
+
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .history-main {
+            flex: 1;
+        }
+
+        .history-book {
+            font-size: 16px;
+            font-weight: bold;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-date {
+            padding-top: 6px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .history-page {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .history-memo {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .delete-btn {
+            background-color: #fff;
+            color: #dc3545;
+            border: 1px solid #dc3545;
+            border-radius: 20px;
+            padding: 6px 14px;
+            cursor: pointer;
+            font-size: 13px;
+
+            align-self: center;
+            height: fit-content;
+        }
+
+        .review-card {
+            background: white;
+            border-left: 6px solid #007bff;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .review-header {
+            font-weight: bold;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .review-page {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .review-date {
+            padding-top: 6px;
+            font-size: 14px;
+            color: #555;
+        }
 
     </style>
 </head>
@@ -289,12 +384,41 @@
             今日の復習リスト
         </button>
 
+        <button class="btn"
+                onclick="showHistoryList()">
+            学習履歴
+        </button>
+
     </div>
 
     <div id="input-form" style="display:none;">
         <div class="card">
 
-            <h2>学習記録</h2>
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:10px;
+            ">
+
+                <h2 style="margin:0;">
+                    学習記録
+                </h2>
+
+                <button
+                    onclick="toggleInputHelpPopup()"
+                    style="
+                        padding:6px 10px;
+                        border:none;
+                        border-radius:6px;
+                        background:#17a2b8;
+                        color:white;
+                        cursor:pointer;
+                    ">
+                    使い方
+                </button>
+
+            </div>
 
             <div class="checkbox-container">
                 <input type="checkbox"
@@ -302,12 +426,27 @@
                        onchange="toggleDateSection()">
 
                 <label for="toggle-date" style="padding:0">
-                    過去の日付で記録する
+                    学習日を指定する
                 </label>
             </div>
 
             <div id="date-section">
-                <input type="date" id="study-date">
+
+                <label
+                    for="study-date"
+                    style="
+                        display:block;
+                        margin-bottom:5px;
+                        font-weight:bold;
+                        color:#555;
+                    ">
+                    学習日
+                </label>
+
+                <input
+                    type="date"
+                    id="study-date">
+
             </div>
 
             <label>参考書:</label>
@@ -350,8 +489,11 @@
         </div>
     </div>
 
-    <div id="review-list" style="display:none;">
-        <div class="card">
+    <div id="review-list"
+        style="display:none;background:#f4f4f9;padding:10px;border-radius:10px;">
+
+        <div class="card"
+            style="background:#f4f4f9;box-shadow:none;">
 
             <h2>復習リスト</h2>
 
@@ -370,6 +512,26 @@
             </button>
 
         </div>
+    </div>
+
+    <div id="history-list"
+        style="display:none;background:#f4f4f9;padding:10px;border-radius:10px;">
+
+        <div class="card"
+            style="background:#f4f4f9;box-shadow:none;">
+
+            <h2>学習履歴</h2>
+
+            <div id="history-content"></div>
+
+            <button class="btn"
+                    style="background-color:#6c757d;"
+                    onclick="hideAll()">
+                戻る
+            </button>
+
+        </div>
+
     </div>
 
     <div id="modal-overlay"></div>
@@ -478,7 +640,7 @@
 
         return data[userId];
     }
-!
+
     // =========================
     // 画面制御
     // =========================
@@ -491,6 +653,8 @@
 
         document.getElementById('review-list').style.display = 'none';
 
+        document.getElementById('history-list').style.display = 'none';
+
         document.getElementById('undo-btn').style.display = 'none';
 
         document.getElementById('user-popup').style.display = 'none';
@@ -498,6 +662,8 @@
         document.getElementById('book-popup').style.display = 'none';
 
         document.getElementById('help-popup').style.display = 'none';
+
+        document.getElementById('input-help-popup').style.display = 'none';
 
         document.getElementById('modal-overlay').style.display = 'none';
     }
@@ -833,6 +999,10 @@
 
         document.getElementById('input-form').style.display = 'block';
 
+        document.getElementById('toggle-date').checked = false;
+
+        document.getElementById('date-section').style.display = 'none';
+
         document.getElementById('study-date').valueAsDate = new Date();
 
         autoFillPage();
@@ -950,6 +1120,13 @@
         alert('記録しました！');
 
         hideAll();
+    }
+
+    function canModifyRecord(record) {
+
+        return !record.checks.d1 &&
+               !record.checks.d7 &&
+               !record.checks.d30;
     }
 
     // =========================
@@ -1117,6 +1294,17 @@
     // 復習リスト
     // =========================
 
+    function formatDate(timestamp) {
+
+        const d = new Date(timestamp);
+
+        return (
+            d.getFullYear() + '/' +
+            String(d.getMonth() + 1).padStart(2, '0') + '/' +
+            String(d.getDate()).padStart(2, '0')
+        );
+    }
+
     function showReviewList() {
 
         document.getElementById('main-menu').style.display = 'none';
@@ -1125,7 +1313,7 @@
 
         let records =
             [...getCurrentUserData().records];
-        
+
         records.sort((a, b) => {
 
             const now = Date.now();
@@ -1155,7 +1343,7 @@
         });
 
         const now =
-            new Date().getTime();
+            Date.now();
 
         const day =
             24 * 60 * 60 * 1000;
@@ -1165,77 +1353,146 @@
             let diffDays =
                 (now - r.date) / day;
 
-            let tasks = [];
-
-            const memoText =
-                r.memo
-                    ? ` (${r.memo})`
-                    : '';
+            let reviewLabel = '';
+            let reviewKey = '';
+            let autoClearBelow = false;
 
             if (diffDays >= 30 &&
                 !r.checks.d30) {
 
-                tasks.push(`
-                    <div class="item">
-
-                        <input type="checkbox"
-                               onchange="toggleCheck(${r.id}, 'd30', true)">
-
-                        <label>
-                            復習3:
-                            ${r.book}
-                            ${r.start}-${r.end}p
-                            ${memoText}
-                        </label>
-
-                    </div>
-                `);
+                reviewLabel = '復習③';
+                reviewKey = 'd30';
+                autoClearBelow = true;
 
             } else if (diffDays >= 7 &&
-                       !r.checks.d7) {
+                    !r.checks.d7) {
 
-                tasks.push(`
-                    <div class="item">
-
-                        <input type="checkbox"
-                               onchange="toggleCheck(${r.id}, 'd7', true)">
-
-                        <label>
-                            復習2:
-                            ${r.book}
-                            ${r.start}-${r.end}p
-                            ${memoText}
-                        </label>
-
-                    </div>
-                `);
+                reviewLabel = '復習②';
+                reviewKey = 'd7';
+                autoClearBelow = true;
 
             } else if (diffDays >= 1 &&
-                       !r.checks.d1) {
+                    !r.checks.d1) {
 
-                tasks.push(`
-                    <div class="item">
+                reviewLabel = '復習①';
+                reviewKey = 'd1';
+                autoClearBelow = false;
 
-                        <input type="checkbox"
-                               onchange="toggleCheck(${r.id}, 'd1', false)">
+            } else {
 
-                        <label>
-                            復習1:
-                            ${r.book}
-                            ${r.start}-${r.end}p
-                            ${memoText}
-                        </label>
-
-                    </div>
-                `);
+                return '';
             }
 
-            return tasks.join('');
+            return `
+
+                <div class="review-card">
+
+                    <div class="history-main">
+
+                        <div class="review-header">
+                            ${reviewLabel}　${r.book}
+                        </div>
+
+                        <div class="review-page">
+                            ページ：${r.start} ～ ${r.end}
+                        </div>
+
+                        ${
+                            r.memo && r.memo.trim()
+                                ? `
+                                    <div class="history-memo">
+                                        備考欄：${r.memo}
+                                    </div>
+                                `
+                                : ''
+                        }
+
+                        <div class="review-date">
+                            学習日：${formatDate(r.date)}
+                        </div>
+                    </div>
+
+                    <button
+                        class="delete-btn"
+                        onclick="toggleCheck(${r.id}, '${reviewKey}', ${autoClearBelow})">
+                        復習済
+                    </button>
+
+                </div>
+
+            `;
 
         }).join('');
 
         document.getElementById('review-content').innerHTML =
             html || 'やるべき復習はありません。';
+    }
+
+    function showHistoryList() {
+
+        document.getElementById('main-menu').style.display = 'none';
+
+        document.getElementById('history-list').style.display = 'block';
+
+        const records =
+            [...getCurrentUserData().records]
+                .reverse();
+
+        let html =
+            records.map(r => {
+
+                const date = formatDate(r.date);
+
+                return `
+                    <div class="history-item">
+
+                        <div class="history-main">
+
+                            <div class="history-book">
+                                ${r.book}
+                            </div>
+
+                            <div class="history-page">
+                                ページ：${r.start} ～ ${r.end}
+                            </div>
+
+                            ${
+                                r.memo && r.memo.trim()
+                                    ? `
+                                        <div class="history-memo">
+                                            備考欄：${r.memo}
+                                        </div>
+                                    `
+                                    : ''
+                            }
+
+                            <div class="history-date">
+                                学習日：${date}
+                            </div>
+
+                        </div>
+
+                        ${
+                            canModifyRecord(r)
+                                ? `
+                                    <button
+                                        class="delete-btn"
+                                        onclick="deleteRecord(${r.id})">
+                                        削除
+                                    </button>
+                                `
+                                : ''
+                        }
+
+                    </div>
+                `;
+
+            }).join('');
+
+        document.getElementById(
+            'history-content'
+        ).innerHTML =
+            html || '学習履歴がありません';
     }
 
     function toggleCheck(id, key, autoClearBelow) {
@@ -1367,6 +1624,26 @@
         }
     }
 
+    function toggleInputHelpPopup() {
+
+        const popup =
+            document.getElementById('input-help-popup');
+
+        const overlay =
+            document.getElementById('modal-overlay');
+
+        if (popup.style.display === 'block') {
+
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+
+        } else {
+
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+    }
+
     function closeBookPopup() {
         document.getElementById('book-popup').style.display = 'none';
         document.getElementById('modal-overlay').style.display = 'none';
@@ -1454,6 +1731,30 @@
         ).textContent =
             `今日の復習リスト (${count}件)`;
     }
+
+    function deleteRecord(id) {
+
+        if (!confirm('この記録を削除しますか？')) {
+            return;
+        }
+
+        let data =
+            getStudyData();
+
+        const userId =
+            getCurrentUserId();
+
+        data[userId].records =
+            data[userId].records.filter(
+                r => r.id !== id
+            );
+
+        saveStudyData(data);
+
+        updateReviewCount();
+
+        showHistoryList();
+    }
     
 
     // =========================
@@ -1513,6 +1814,37 @@
 
             <b>⑤ ユーザー切替</b><br>
             ユーザーごとに学習履歴を管理<br>
+
+        </div>
+
+    </div>
+
+    <div id="input-help-popup" class="user-popup">
+
+        <div class="popup-close">
+            <button onclick="toggleInputHelpPopup()">✕</button>
+        </div>
+
+        <h3>学習記録の使い方</h3>
+
+        <div style="line-height:1.8;">
+            
+            <b>④ 学習日設定</b><br>
+            チェックなし：学習日=当日<br>
+            チェックあり：学習日=任意の日付<br><br>
+
+            <b>① 参考書選択</b><br>
+            プルダウンから選択<br><br>
+
+            <b>② 参考書追加</b><br>
+            未登録の場合は「＋」から追加<br><br>
+
+            <b>③ ページ入力</b><br>
+            開始ページ・終了ページを入力<br>
+            開始ページは前回の続きが自動入力<br><br>
+
+            <b>⑤ 保存</b><br>
+            「保存する」で学習履歴へ登録
 
         </div>
 
